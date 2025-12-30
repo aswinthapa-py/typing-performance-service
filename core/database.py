@@ -1,18 +1,17 @@
 import sqlite3
 from pathlib import Path
-DB_PATH = Path(__file__).resolve().parent.parent / "data" / "typing.db"
 
-DB_PATH.parent.mkdir(exist_ok=True)
-
-conn = sqlite3.connect(DB_PATH)
 class DatabaseManager:
     def __init__(self):
-        self.db_path = Path("data") /"typing.db"
+        self.db_path = (
+            Path(__file__).resolve().parent.parent / "data" / "typing.db"
+        )
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+
         self.create_tables()
     
     def connect(self):
-        connection=sqlite3.connect(self.db_path)
-        return connection
+        return sqlite3.connect(self.db_path)
     
     def create_tables(self):
         connection = self.connect()
