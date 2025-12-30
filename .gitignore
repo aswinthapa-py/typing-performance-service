@@ -1,18 +1,5 @@
-# Python
+venv/
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-
-# Virtual environment
-venv/
-
-# Environment files
 .env
-
-# Database
-*.db
-
-# OS
-.DS_Store
-Thumbs.db
+data/*.db

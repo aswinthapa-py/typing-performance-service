@@ -13,6 +13,7 @@ from core.session_controller import TypingSession
 from core.database import DatabaseManager
 import time
 import random
+import uuid
 
 
 # Flask app setup
@@ -20,15 +21,28 @@ app = Flask(__name__)
 
 # Utility: get random typing text
 def get_random_text():
-    text_file = ROOT_DIR / "texts" / "medium.txt"
-    with open(text_file, "r", encoding="utf-8") as f:
-        lines = [line.strip() for line in f if line.strip()]
-    return random.choice(lines)
+    text_files = ["short.txt", "medium.txt", "long.txt", "paragraphs.txt"]
+    chosen = random.choice(text_files)
+    path = ROOT_DIR / "texts" / chosen
+
+    with open(path, "r", encoding="utf-8") as f:
+        blocks = [
+            block.strip()
+            for block in f.read().split("\n\n")
+            if block.strip()
+        ]
+
+    return random.choice(blocks)
 
 
 # Main route: typing test
 @app.route("/")
 def index():
+    
+    user_id=request.cookies.get("user_id")
+
+    if not user_id:
+        user_id=str(uuid.uuid4())
     reference_text = get_random_text()
 
     response = make_response(
@@ -37,6 +51,7 @@ def index():
 
     # Store reference text for /submit
     response.set_cookie("reference_text", reference_text)
+    response.set_cookie("user_id",user_id,httponly=True)
 
     return response
 
@@ -45,22 +60,27 @@ def index():
 def submit():
     data = request.get_json()
 
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return "User not identified",400
+    
     typed_text = data.get("typed_text", "")
     elapsed_time = float(data.get("elapsed_time", 0))
+    wpm_samples=data.get("wpm_samples",[])
 
     reference_text = request.cookies.get("reference_text")
     if not reference_text:
         return "Reference text missing", 400
 
-    # Create typing session
     session = TypingSession()
     session.input_tracker.typed_buffer = typed_text
     session.finish()
 
-    # Evaluate
     result = session.evaluate(
         reference_text=reference_text,
-        elapsed_time=elapsed_time
+        elapsed_time=elapsed_time,
+        wpm_samples=wpm_samples,
+        user_id=user_id
     )
 
     return render_template("result.html", result=result)
@@ -68,10 +88,23 @@ def submit():
 # History & progress page
 @app.route("/history")
 def history():
+    user_id=request.cookies.get("user_id")
+
     db = DatabaseManager()
 
-    sessions = db.get_all_sessions()
-    avg_net_wpm, avg_accuracy, total_sessions = db.get_summary_stats()
+    sessions = db.get_sessions_by_user(user_id)
+
+    total_sessions= len(sessions)
+    avg_net_wpm = (
+        sum(row[3] for row in sessions) / total_sessions
+        if total_sessions else 0
+    )
+    avg_accuracy = (
+        sum(row[4] for row in sessions) / total_sessions
+        if total_sessions else 0
+    )
+
+    
 
     # -------------------------------
     # CONFIG
@@ -99,7 +132,10 @@ def history():
     # -------------------------------
     # Trend (compare first vs last)
     # -------------------------------
-    trend = "↑" if len(net_wpm_data) > 1 and net_wpm_data[-1] >= net_wpm_data[0] else "↓"
+    if len(net_wpm_data) <2:
+        trend="-"
+    else:
+        trend = "↑" if net_wpm_data[-1] >= net_wpm_data[0] else "↓"
 
     return render_template(
         "history.html",

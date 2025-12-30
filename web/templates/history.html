@@ -56,6 +56,15 @@
             font-size: 22px; /* smaller, cleaner */
             color: #4de0c4;
         }
+        .trend.up{
+            color:#55e48a;
+        }
+        .trend.down{
+            color:#f04444
+        }
+        .trend.neutral{
+            color:#9ca3af;
+        }
 
         /* ======================
            Charts
@@ -135,7 +144,12 @@
         <div class="card">Total Sessions<span>{{ total_sessions }}</span></div>
         <div class="card">Average Net WPM<span>{{ avg_net_wpm }}</span></div>
         <div class="card">Average Accuracy<span>{{ avg_accuracy }}%</span></div>
-        <div class="card">Trend<span>{{ trend }}</span></div>
+        <div class="card">
+            Trend
+            <span class="trend {{ 'up' if trend == '↑' else 'down' if trend == '↓' else 'neutral' }}">
+            {{ trend }}
+        </span>
+</div>
     </div>
 
     <!-- Charts -->
@@ -241,6 +255,5 @@ new Chart(document.getElementById("accuracyChart"), {
     }
 });
 </script>
-
 </body>
 </html>

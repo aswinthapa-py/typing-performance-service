@@ -6,7 +6,17 @@ from core.metrics import MetricsCalculator
 from core.feedback_engine import FeedbackEngine
 from core.database import DatabaseManager
 from datetime import datetime
+import statistics
 
+def calculate_consistency(wpm_samples: list[float]) -> float:
+    if not wpm_samples or len(wpm_samples) < 3:
+        return 100.0
+
+    mean = statistics.mean(wpm_samples)
+    std = statistics.stdev(wpm_samples)
+
+    consistency = 100 - (std / mean) * 100
+    return round(max(0, min(consistency, 100)), 1)
 
 class TypingSession:
     def __init__(self, duration_seconds: float | None=None):
@@ -50,8 +60,18 @@ class TypingSession:
     
     def finish(self):
         self.state=TestState.FINISHED
+    
+    def calculate_consistency(wpm_samples: list[float]) -> float:
+        if not wpm_samples or len(wpm_samples) < 3:
+            return 100.0
 
-    def evaluate(self, reference_text: str, elapsed_time: float=None):
+        mean = statistics.mean(wpm_samples)
+        std = statistics.stdev(wpm_samples)
+
+        consistency = 100 - (std / mean) * 100
+        return round(max(0, min(consistency, 100)), 1)
+
+    def evaluate(self, reference_text: str, elapsed_time: float=None,wpm_samples:list[float] | None=None, user_id: str=None):
         if self.state != TestState.FINISHED:
             raise RuntimeError("Session is not finished yet")
 
@@ -68,6 +88,8 @@ class TypingSession:
             corrected_errors=0
         )
         metrics = calculator.calculate()
+        consistency=calculate_consistency(wpm_samples or [])
+        metrics["consistency"]= consistency
 
         error_data = {
             "error_list": error_list,
@@ -79,12 +101,12 @@ class TypingSession:
 
         # Save session to database
         self.db.save_session(
+            user_id=user_id,
             session_date=datetime.now().isoformat(),
             gross_wpm=metrics["gross_wpm"],
             net_wpm=metrics["net_wpm"],
             accuracy=metrics["accuracy"]
         )
-
         return {
             "typed_text": self.input_tracker.typed_buffer,
             "errors": error_list,

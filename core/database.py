@@ -4,6 +4,7 @@ from pathlib import Path
 class DatabaseManager:
     def __init__(self):
         self.db_path = Path("data") /"typing.db"
+        self.create_tables()
     
     def connect(self):
         connection=sqlite3.connect(self.db_path)
@@ -15,6 +16,7 @@ class DatabaseManager:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS typing_sessions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL,
                 session_date TEXT NOT NULL,
                 gross_wpm REAL NOT NULL,
                 net_wpm REAL NOT NULL,
@@ -24,16 +26,16 @@ class DatabaseManager:
         connection.commit()
         connection.close()
     
-    def save_session(self, session_date: str, gross_wpm: float, net_wpm: float, accuracy: float):
+    def save_session(self, user_id, session_date: str, gross_wpm: float, net_wpm: float, accuracy: float):
         connection = self.connect()
         cursor = connection.cursor()
 
         cursor.execute(
             """
-            INSERT INTO typing_sessions (session_date, gross_wpm, net_wpm, accuracy)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO typing_sessions (user_id,session_date, gross_wpm, net_wpm, accuracy)
+            VALUES (?, ?, ?, ?,?)
             """,
-            (session_date, gross_wpm, net_wpm, accuracy)
+            (user_id,session_date, gross_wpm, net_wpm, accuracy)
         )
 
         connection.commit()
@@ -69,10 +71,18 @@ class DatabaseManager:
         connection.close()
 
         return avg_net_wpm, avg_accuracy, total_sessions
+    
+    def get_sessions_by_user(self, user_id):
+        connection=self.connect()
+        cursor=connection.cursor()
 
+        cursor.execute("""
+            SELECT id, session_date, gross_wpm, net_wpm, accuracy
+            FROM typing_sessions
+            WHERE user_id = ?
+            ORDER BY id ASC
+        """, (user_id,))
 
-
-
-
-
-
+        rows=cursor.fetchall()
+        connection.close()
+        return rows
