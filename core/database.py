@@ -1,6 +1,10 @@
 import sqlite3
 from pathlib import Path
+DB_PATH = Path(__file__).resolve().parent.parent / "data" / "typing.db"
 
+DB_PATH.parent.mkdir(exist_ok=True)
+
+conn = sqlite3.connect(DB_PATH)
 class DatabaseManager:
     def __init__(self):
         self.db_path = Path("data") /"typing.db"
