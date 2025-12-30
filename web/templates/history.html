@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Typing Progress</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top, #151a2e, #0b0f1d);
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 60px auto;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 18px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            margin: 50px 0 20px;
+            font-size: 26px;
+        }
+
+        /* ======================
+           Summary Cards
+        ====================== */
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 20px;
+            border-radius: 14px;
+            text-align: center;
+        }
+
+        .card span {
+            display: block;
+            margin-top: 8px;
+            font-size: 22px; /* smaller, cleaner */
+            color: #4de0c4;
+        }
+
+        /* ======================
+           Charts
+        ====================== */
+        .charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 16px;
+            padding: 20px;
+            height: 280px;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* ======================
+           Table
+        ====================== */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+
+        thead {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        th, td {
+            padding: 14px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 40px;
+            padding: 12px 24px;
+            background: #4de0c4;
+            color: #000;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 900px) {
+            .summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .charts {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <h1>Typing Progress</h1>
+
+    <!-- Summary -->
+    <div class="summary">
+        <div class="card">Total Sessions<span>{{ total_sessions }}</span></div>
+        <div class="card">Average Net WPM<span>{{ avg_net_wpm }}</span></div>
+        <div class="card">Average Accuracy<span>{{ avg_accuracy }}%</span></div>
+        <div class="card">Trend<span>{{ trend }}</span></div>
+    </div>
+
+    <!-- Charts -->
+    <h2>Progress Over Attempts</h2>
+    <div class="charts">
+        <div class="chart-card">
+            <canvas id="wpmChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <canvas id="accuracyChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <h2>Session History</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Net WPM</th>
+                <th>Accuracy</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in sessions %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ row[1][:16] }}</td>
+                <td>{{ row[3] | round(2) }}</td>
+                <td>{{ row[4] | round(2) }}%</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="/" class="back-btn">Back to Test</a>
+</div>
+
+<!-- ======================
+     Chart Data
+====================== -->
+<script>
+const labels = {{ labels | tojson }};
+const netWpmData = {{ net_wpm_data | tojson }};
+const accuracyData = {{ accuracy_data | tojson }};
+</script>
+
+<!-- ======================
+     Net WPM Chart
+====================== -->
+<script>
+new Chart(document.getElementById("wpmChart"), {
+    type: "line",
+    data: {
+        labels,
+        datasets: [{
+            label: "Net WPM",
+            data: netWpmData,
+            borderColor: "#5eead4",
+            backgroundColor: "rgba(94,234,212,0.12)",
+            tension: 0.4,
+            fill: true,
+            pointRadius: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: { display: false },
+            y: { beginAtZero: true }
+        }
+    }
+});
+</script>
+
+<!-- ======================
+     Accuracy Chart
+====================== -->
+<script>
+new Chart(document.getElementById("accuracyChart"), {
+    type: "line",
+    data: {
+        labels,
+        datasets: [{
+            label: "Accuracy (%)",
+            data: accuracyData,
+            borderColor: "#60a5fa",
+            backgroundColor: "rgba(96,165,250,0.12)",
+            tension: 0.4,
+            fill: true,
+            pointRadius: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: { display: false },
+            y: { beginAtZero: true }
+        }
+    }
+});
+</script>
+
+</body>
+</html>

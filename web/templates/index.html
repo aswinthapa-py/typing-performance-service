@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Typing Practice</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .typing-area {
+            margin-top: 20px;
+            font-size: 20px;
+            line-height: 1.6;
+            user-select: none;
+        }
+
+        .typing-area span {
+            white-space: pre;
+        }
+
+        .pending { color: #6b7280; }
+        .correct { color: #4ade80; }
+        .incorrect { color: #f87171; }
+
+        .cursor {
+            border-left: 2px solid #facc15;
+            margin-left: -2px;
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            50% { border-color: transparent; }
+        }
+
+        #hidden-input {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .timer {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+
+<body>
+<div class="page">
+    <div class="card">
+
+        <h1>Typing Practice</h1>
+        <p class="muted">
+            Type the text below exactly as shown. Focus on accuracy over speed.
+        </p>
+
+        <!-- Typing text rendered as spans -->
+        <div id="typing-area" class="typing-area"></div>
+
+        <!-- Hidden input to capture keystrokes -->
+        <input id="hidden-input" autofocus>
+
+        <!-- Timer -->
+        <div class="timer">
+            Time: <span id="timer">0.0</span>s
+        </div>
+
+    </div>
+</div>
+
+<!-- Inject reference text -->
+<script>
+    const REFERENCE_TEXT = {{ reference_text | tojson }};
+</script>
+
+
+<script>
+    const typingArea = document.getElementById("typing-area");
+    const timerEl = document.getElementById("timer");
+
+    let currentIndex = 0;
+    let startTime = null;
+    let timerInterval = null;
+    let typedBuffer = "";
+    let finished = false;   // 🔒 input lock
+
+    // Render reference text
+    REFERENCE_TEXT.split("").forEach((char, index) => {
+        const span = document.createElement("span");
+        span.textContent = char;
+        span.classList.add("pending");
+        if (index === 0) span.classList.add("cursor");
+        typingArea.appendChild(span);
+    });
+
+    function startTimer() {
+        startTime = performance.now();
+        timerInterval = setInterval(() => {
+            const elapsed = (performance.now() - startTime) / 1000;
+            timerEl.textContent = elapsed.toFixed(1);
+        }, 100);
+    }
+
+    function finishTest() {
+        finished = true; // 🔒 STOP INPUT
+        clearInterval(timerInterval);
+
+        const elapsedSeconds = (performance.now() - startTime) / 1000;
+
+        fetch("/submit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                typed_text: typedBuffer,
+                elapsed_time: elapsedSeconds
+            })
+        })
+        .then(res => res.text())
+        .then(html => {
+            document.open();
+            document.write(html);
+            document.close();
+        });
+    }
+
+    document.addEventListener("keydown", (e) => {
+        if (finished) return;
+        if (currentIndex >= REFERENCE_TEXT.length) return
+        
+        if (e.key === "Enter") return;
+        e.preventDefault();
+
+        if (!startTime) startTimer();
+
+        const spans = typingArea.children;
+
+        if (e.key === "Backspace") {
+            if (currentIndex > 0) {
+                currentIndex--;
+                typedBuffer = typedBuffer.slice(0, -1);
+                spans[currentIndex].className = "pending cursor";
+                if (currentIndex + 1 < spans.length) {
+                    spans[currentIndex + 1].classList.remove("cursor");
+                }
+            }
+            return;
+        }
+
+        if (e.key.length !== 1) return;
+
+        const expectedChar = spans[currentIndex].textContent;
+        typedBuffer += e.key;
+
+        spans[currentIndex].classList.remove("cursor");
+        spans[currentIndex].classList.add(
+            e.key === expectedChar ? "correct" : "incorrect"
+        );
+
+        currentIndex++;
+
+        if (currentIndex < spans.length) {
+            spans[currentIndex].classList.add("cursor");
+        } else {
+            finishTest();
+        }
+    });
+</script>
+</body>
+</html>

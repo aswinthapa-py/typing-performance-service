@@ -1,0 +1,151 @@
+/* -----------------------------
+   DESIGN TOKENS
+--------------------------------*/
+:root {
+    --bg-main: #0f1220;
+    --bg-card: #171a2e;
+    --text-primary: #e6e8f0;
+    --text-muted: #9aa0c4;
+    --accent: #4fd1c5;
+    --error: #f56565;
+    --success: #48bb78;
+    --border: #2a2f55;
+
+    --fs-xl: 2rem;
+    --fs-lg: 1.25rem;
+    --fs-md: 1rem;
+    --fs-sm: 0.875rem;
+
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 40px;
+}
+
+/* -----------------------------
+   GLOBAL RESET
+--------------------------------*/
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+/* -----------------------------
+   LAYOUT
+--------------------------------*/
+.page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--space-xl);
+}
+
+.card {
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    padding: var(--space-xl);
+    max-width: 720px;
+    width: 100%;
+    border: 1px solid var(--border);
+}
+
+/* -----------------------------
+   TEXT
+--------------------------------*/
+h1 {
+    font-size: var(--fs-xl);
+    margin-bottom: var(--space-md);
+}
+
+h2 {
+    font-size: var(--fs-lg);
+    margin-bottom: var(--space-sm);
+}
+
+p {
+    font-size: var(--fs-md);
+    color: var(--text-primary);
+}
+
+.muted {
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+}
+
+/* -----------------------------
+   TYPING TEXT
+--------------------------------*/
+.reference-text {
+    background-color: var(--bg-main);
+    padding: var(--space-md);
+    border-radius: 8px;
+    font-size: var(--fs-md);
+    margin-bottom: var(--space-lg);
+    border: 1px solid var(--border);
+}
+
+
+
+/* -----------------------------
+   BUTTON
+--------------------------------*/
+button {
+    background-color: var(--accent);
+    color: #000;
+    border: none;
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: 8px;
+    font-size: var(--fs-md);
+    cursor: pointer;
+    margin-top: var(--space-md);
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+/* -----------------------------
+   FEEDBACK
+--------------------------------*/
+.success {
+    color: var(--success);
+}
+
+.error {
+    color: var(--error);
+}
+
+.list {
+    margin-top: var(--space-sm);
+    padding-left: var(--space-lg);
+}
+textarea:focus {
+    box-shadow: 0 0 0 2px rgba(79, 209, 197, 0.15);
+}
+
+.btn {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 12px 24px;
+    background: #4de0c4;
+    color: #000;
+    border-radius: 10px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.btn.secondary {
+    background: transparent;
+    color: #4de0c4;
+    border: 1px solid #4de0c4;
+    margin-left: 10px;
+}

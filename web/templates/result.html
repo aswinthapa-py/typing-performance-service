@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Typing Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="page">
+    <div class="card">
+
+        <h1>Typing Results</h1>
+        <p class="muted">Here’s a summary of your typing performance.</p>
+
+        <h2>Key Metrics</h2>
+        <ul class="list">
+            <li><strong>Gross WPM:</strong> {{ result.metrics.gross_wpm | round(2) }}</li>
+            <li><strong>Net WPM:</strong> {{ result.metrics.net_wpm | round(2) }}</li>
+            <li><strong>Accuracy:</strong> {{ result.metrics.accuracy | round(2) }}%</li>
+            <li><strong>Error Density:</strong> {{ result.metrics.error_density | round(2) }}%</li>
+        </ul>
+
+        <h2>Feedback</h2>
+        <p>{{ result.feedback.speed_feedback }}</p>
+        <p>{{ result.feedback.accuracy_feedback }}</p>
+
+        {% if result.feedback.behavior_insights %}
+        <h2>Insights</h2>
+        <ul class="list">
+            {% for insight in result.feedback.behavior_insights %}
+            <li>{{ insight }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if result.feedback.recommendations %}
+        <h2>Recommendations</h2>
+        <ul class="list">
+            {% for rec in result.feedback.recommendations %}
+            <li>{{ rec }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <a href="/" class="btn">Try Again</a>
+        <a href="/history" class="btn secondary">View Progress</a>
+
+    </div>
+</div>
+</body>
+</html>
